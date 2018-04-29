@@ -1,0 +1,43 @@
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="app_name">Popular Movies</string>
+    <string name="json_test">Json Test</string>
+    <string name="date_format">yyyy-MM-dd</string>
+    <string name="span_count">3</string>
+    <string name="action_settings">Settings</string>
+
+
+    <string name="pref_sort_key" translatable="false">sort</string>
+
+    <string name="pref_sort_label_popular">Popularity</string>
+    <string name="pref_sort_label_rate">Top Rated</string>
+    <string name="pref_sort_label">Sort by</string>
+    <string name="pref_grid_column_count_label">Number of columns in grid</string>
+
+    <string name="pref_sort_popular" translatable="false">popular</string>
+    <string name="pref_sort_rate" translatable="false">top_rated</string>
+    <string name="pref_sort_default" translatable="false">@string/pref_sort_popular</string>
+
+    <string name="pref_grid_column_count_key" translatable="false">grid_column_count</string>
+    <string name="pref_grid_column_count_two" translatable="false">2</string>
+    <string name="pref_grid_column_count_three" translatable="false">3</string>
+    <string name="pref_grid_column_count_four" translatable="false">4</string>
+    <string name="pref_grid_column_count_five" translatable="false">5</string>
+    <string name="pref_grid_column_count_default" translatable="false">@string/pref_grid_column_count_two</string>
+
+    <string name="detail_activity_label">Movie Detail</string>
+
+
+    <string name="sample_movie_title">A popular movie</string>
+    <string name="sample_release_date">"2018"</string>
+    <string name="sample_rating">9.7/10</string>
+    <string name="sample_rating_stars">6.6</string>
+    <string name="sample_overview">Determined to prove herself, Officer Judy Hopps, the first bunny on Zootopia\'s police force, jumps at the chance to crack her first case - even if it means partnering with scam-artist fox Nick Wilde to solve the mystery.</string>
+
+    <string name="format_ratings">
+        <xliff:g id="rate">%.1f</xliff:g>/10
+    </string>
+    <string name="no_internet">No internet connection available</string>
+    <string name="first_page">1</string>
+
+
+</resources>
