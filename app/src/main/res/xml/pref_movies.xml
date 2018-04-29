@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ListPreference
+        android:defaultValue="@string/pref_sort_popular"
+        android:entries="@array/pref_sort_options"
+        android:entryValues="@array/pref_sort_values"
+        android:key="@string/pref_sort_key"
+        android:title="@string/pref_sort_label"
+        />
+
+    <ListPreference
+        android:defaultValue="@string/pref_grid_column_count_three"
+        android:entries="@array/pref_grid_column_count_options"
+        android:entryValues="@array/pref_grid_column_count_values"
+        android:key="@string/pref_grid_column_count_key"
+        android:title="@string/pref_grid_column_count_label"
+        />
+
+</PreferenceScreen>

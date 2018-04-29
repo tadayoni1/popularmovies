@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <integer name="pref_grid_column_count_two">2</integer>
+    <integer name="pref_grid_column_count_three">3</integer>
+    <integer name="pref_grid_column_count_four">4</integer>
+
+    <integer name="detail_activity_background_alpha">30</integer>
+</resources>

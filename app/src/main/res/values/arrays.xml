@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="pref_sort_options">
+        <item>@string/pref_sort_label_popular</item>
+        <item>@string/pref_sort_label_rate</item>
+    </string-array>
+
+    <string-array name="pref_sort_values">
+        <item>@string/pref_sort_popular</item>
+        <item>@string/pref_sort_rate</item>
+    </string-array>
+
+    <string-array name="pref_grid_column_count_options">
+        <item>@string/pref_grid_column_count_two</item>
+        <item>@string/pref_grid_column_count_three</item>
+        <item>@string/pref_grid_column_count_four</item>
+        <item>@string/pref_grid_column_count_five</item>
+    </string-array>
+
+    <string-array name="pref_grid_column_count_values">
+        <item>@string/pref_grid_column_count_two</item>
+        <item>@string/pref_grid_column_count_three</item>
+        <item>@string/pref_grid_column_count_four</item>
+        <item>@string/pref_grid_column_count_five</item>
+    </string-array>
+</resources>
