@@ -6,11 +6,14 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import com.example.android.PopularMovies.model.Movie;
 import com.example.android.PopularMovies.model.PopularResults;
+import com.example.android.PopularMovies.utilities.DbUtils;
 import com.example.android.PopularMovies.utilities.NetworkUtils;
+import com.example.android.PopularMovies.utilities.UiUtils;
 import com.squareup.picasso.Picasso;
 
 public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdapterViewHolder> {
@@ -25,7 +28,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
     final private MoviesAdapterOnClickHandler mClickHandler;
 
     public interface MoviesAdapterOnClickHandler {
-        void onClick(Movie movie);
+        void onClick(Movie movie, int adapterPosition);
     }
 
     public MoviesAdapter(Context context, MoviesAdapterOnClickHandler clickHandler) {
@@ -58,6 +61,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
                 .load(NetworkUtils.getPosterUrl(mPopularResults.getResults().get(position).getPosterPath(), mContext))
                 .placeholder(R.drawable.placeholder_image)
                 .into(holder.mMovieImageView);
+        holder.mFavoriteImageButton.setImageResource(UiUtils.getImageResourceForFavoriteButton(mPopularResults.getResults().get(position).isMarkedAsFavorite()));
         if (position >= getItemCount() - 1) {
             if (mPopularResults.getLastPage() < mPopularResults.getTotalPages()) {
                 onLastItemReachedListener.onLastItemReached(mPopularResults.getLastPage());
@@ -101,10 +105,24 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
             implements View.OnClickListener {
 
         public final ImageView mMovieImageView;
+        public final ImageButton mFavoriteImageButton;
 
         public MoviesAdapterViewHolder(View itemView) {
             super(itemView);
             mMovieImageView = itemView.findViewById(R.id.movie_poster_iv);
+            mFavoriteImageButton = itemView.findViewById(R.id.favorite);
+
+            mFavoriteImageButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int adapterPosition = getAdapterPosition();
+                    boolean markedAsFavorite = !mPopularResults.getResults().get(adapterPosition).isMarkedAsFavorite();
+                    DbUtils.updateFavorites(mContext, markedAsFavorite, mPopularResults.getResults().get(adapterPosition));
+                    UiUtils.showToastForFavoriteButton(mContext, markedAsFavorite, mPopularResults.getResults().get(adapterPosition).getTitle());
+                    mFavoriteImageButton.setImageResource(UiUtils.getImageResourceForFavoriteButton(markedAsFavorite));
+                    mPopularResults.getResults().get(adapterPosition).setMarkedAsFavorite(markedAsFavorite);
+                }
+            });
 
             itemView.setOnClickListener(this);
         }
@@ -113,8 +131,9 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
         public void onClick(View v) {
             int adapterPosition = getAdapterPosition();
             Movie movie = mPopularResults.getResults().get(adapterPosition);
-            mClickHandler.onClick(movie);
+            mClickHandler.onClick(movie, adapterPosition);
         }
+
     }
 
     public interface OnLastItemReachedListener {

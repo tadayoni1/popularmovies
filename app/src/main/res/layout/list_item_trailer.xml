@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp">
+
+        <ImageView
+            android:id="@+id/thumbnail_iv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:src="@drawable/sample_youtube_thumbnail" />
+
+        <TextView
+            android:id="@+id/video_title_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxWidth="176sp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginStart="8dp"
+            app:layout_constraintBottom_toBottomOf="@+id/thumbnail_iv"
+            app:layout_constraintStart_toEndOf="@+id/thumbnail_iv"
+            app:layout_constraintTop_toTopOf="@+id/thumbnail_iv"
+            tools:text="@string/sample_video_title" />
+
+    </android.support.constraint.ConstraintLayout>
+</layout>

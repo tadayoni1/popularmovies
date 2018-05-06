@@ -20,7 +20,9 @@ import android.widget.Toast;
 import com.example.android.PopularMovies.databinding.ActivityMainBinding;
 import com.example.android.PopularMovies.model.Movie;
 import com.example.android.PopularMovies.model.PopularResults;
+import com.example.android.PopularMovies.utilities.DbUtils;
 import com.example.android.PopularMovies.utilities.NetworkUtils;
+import com.example.android.PopularMovies.utilities.UiUtils;
 
 public class MainActivity
         extends AppCompatActivity
@@ -31,12 +33,15 @@ public class MainActivity
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     private final static int LOADER_ID_POPULAR_RESULTS = 44;
+    private final static int LOADER_ID_POPULAR_RESULTS_FAVORITES = 55;
+
     private final static String LOADER_EXTRA_PAGE_NUMBER = "loader-extra-page-number";
     private final static String LOADER_EXTRA_SORT_ORDER = "loader-extra-sort-order";
 
     private final static String LIFECYCLE_CALLBACKS_POPULAR_RESULTS_KEY = "callbacks-popular-results-key";
 
     public static final String INTENT_EXTRA_MOVIE = "intent-extra-movie";
+    public static final String INTENT_EXTRA_ADAPTER_POSITION = "intent-extra-adapter-position";
 
     private ActivityMainBinding mActivityMainBinding;
 
@@ -44,6 +49,8 @@ public class MainActivity
 
     private int mSpanCount;
     private String mSortOrder;
+    private String mLastSortOrder;
+
     private boolean mReloadFromApi;
 
     @Override
@@ -65,16 +72,24 @@ public class MainActivity
         mMoviesAdapter.setOnLastItemReachedListener(new MoviesAdapter.OnLastItemReachedListener() {
             @Override
             public void onLastItemReached(int last_page) {
-                mReloadFromApi = false;
-                String page_number = String.valueOf(++last_page);
-                restartLoader(page_number);
+                readSharedPreferences();
+                if (!mSortOrder.equals(getString(R.string.pref_sort_favorites))) {
+                    mReloadFromApi = false;
+                    String page_number = String.valueOf(++last_page);
+                    restartLoader(LOADER_ID_POPULAR_RESULTS, page_number);
+                }
             }
         });
 
         if (savedInstanceState == null || !(savedInstanceState.containsKey(LIFECYCLE_CALLBACKS_POPULAR_RESULTS_KEY))) {
-            Log.d(LOG_TAG, "restartLoader() in onCreate()");
-            mReloadFromApi = true;
-            restartLoader(getString(R.string.first_page));
+            readSharedPreferences();
+            if (mSortOrder.equals(getString(R.string.pref_sort_favorites))) {
+                restartLoader(LOADER_ID_POPULAR_RESULTS_FAVORITES, null);
+            } else {
+                Log.d(LOG_TAG, "restartLoader() in onCreate()");
+                mReloadFromApi = true;
+                restartLoader(LOADER_ID_POPULAR_RESULTS, getString(R.string.first_page));
+            }
         } else {
             Log.d(LOG_TAG, "Load from savedInstance in onCreate()");
             PopularResults popularResults = savedInstanceState.getParcelable(LIFECYCLE_CALLBACKS_POPULAR_RESULTS_KEY);
@@ -106,17 +121,47 @@ public class MainActivity
         mActivityMainBinding.moviesList.setLayoutManager(layoutManager);
     }
 
-    private void restartLoader(String page_number) {
-        Bundle args = new Bundle();
-        args.putString(LOADER_EXTRA_PAGE_NUMBER, page_number);
-        args.putString(LOADER_EXTRA_SORT_ORDER, mSortOrder);
-        getSupportLoaderManager().restartLoader(LOADER_ID_POPULAR_RESULTS, args, this).forceLoad();
+//    private void restartApiLoader(String page_number) {
+//        Bundle args = new Bundle();
+//        args.putString(LOADER_EXTRA_PAGE_NUMBER, page_number);
+//        args.putString(LOADER_EXTRA_SORT_ORDER, mSortOrder);
+//        getSupportLoaderManager().restartLoader(LOADER_ID_POPULAR_RESULTS, args, this).forceLoad();
+//    }
+//
+//    private void restartDbLoader() {
+//        getSupportLoaderManager().restartLoader(LOADER_ID_POPULAR_RESULTS_FAVORITES, null, this).forceLoad();
+//    }
+
+    private void restartLoader(int loaderId, @Nullable String page_number) {
+        switch (loaderId) {
+            case LOADER_ID_POPULAR_RESULTS:
+                Bundle args = new Bundle();
+                args.putString(LOADER_EXTRA_PAGE_NUMBER, page_number);
+                args.putString(LOADER_EXTRA_SORT_ORDER, mSortOrder);
+                getSupportLoaderManager().restartLoader(LOADER_ID_POPULAR_RESULTS, args, this).forceLoad();
+                break;
+            case LOADER_ID_POPULAR_RESULTS_FAVORITES:
+                getSupportLoaderManager().restartLoader(LOADER_ID_POPULAR_RESULTS_FAVORITES, null, this).forceLoad();
+                break;
+            default:
+                throw new RuntimeException("Loader not implemented: " + loaderId);
+
+        }
     }
 
     private void readSharedPreferences() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mSpanCount = Integer.parseInt(sharedPreferences.getString(getString(R.string.pref_grid_column_count_key), getString(R.string.pref_grid_column_count_default)));
         mSortOrder = sharedPreferences.getString(getString(R.string.pref_sort_key), getString(R.string.pref_sort_default));
+        mLastSortOrder = sharedPreferences.getString(getString(R.string.pref_last_sort_key), getString(R.string.pref_sort_default));
+    }
+
+    private void writeSortOrderToSharedPreferences(String last_sort_order, String sort_order) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString(getString(R.string.pref_last_sort_key), last_sort_order);
+        editor.putString(getString(R.string.pref_sort_key), sort_order);
+        editor.apply();
     }
 
     @NonNull
@@ -139,6 +184,14 @@ public class MainActivity
 //                        return NetworkUtils.readPopularResultsFromFakeUtils(getContext());
                     }
                 };
+            case LOADER_ID_POPULAR_RESULTS_FAVORITES:
+                return new AsyncTaskLoader<PopularResults>(this) {
+                    @Nullable
+                    @Override
+                    public PopularResults loadInBackground() {
+                        return DbUtils.readPopularResultsFromDB(getContext());
+                    }
+                };
             default:
                 throw new RuntimeException("Loader not implemented: " + loaderId);
         }
@@ -150,12 +203,21 @@ public class MainActivity
             case LOADER_ID_POPULAR_RESULTS:
                 if (data == null) {
                     Toast.makeText(this, getString(R.string.no_internet), Toast.LENGTH_LONG).show();
-                }
-                if (mReloadFromApi) {
-                    mMoviesAdapter.setData(data);
+                    mMoviesAdapter.setData(null);
                 } else {
-                    //if the loader is called through setOnLastItemReachedListener then addToData
-                    mMoviesAdapter.addToData(data);
+                    if (mReloadFromApi) {
+                        mMoviesAdapter.setData(data);
+                    } else {
+                        //if the loader is called through setOnLastItemReachedListener then addToData
+                        mMoviesAdapter.addToData(data);
+                    }
+                }
+                break;
+            case LOADER_ID_POPULAR_RESULTS_FAVORITES:
+                if (data == null) {
+                    Toast.makeText(this, getString(R.string.no_favorites), Toast.LENGTH_LONG).show();
+                } else {
+                    mMoviesAdapter.setData(data);
                 }
                 break;
             default:
@@ -171,7 +233,8 @@ public class MainActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.movies_menu, menu);
-
+        readSharedPreferences();
+        menu.getItem(0).setIcon(UiUtils.getImageResourceForFavoriteButton(mSortOrder == getString(R.string.pref_sort_favorites)));
         return true;
     }
 
@@ -182,6 +245,16 @@ public class MainActivity
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
                 return true;
+            case R.id.action_show_favorites:
+                readSharedPreferences();
+                if (mSortOrder.equals(getString(R.string.pref_sort_favorites))) {
+                    item.setIcon(UiUtils.getImageResourceForFavoriteButton(false));
+                    writeSortOrderToSharedPreferences(getString(R.string.pref_sort_favorites), mLastSortOrder);
+                } else {
+                    item.setIcon(UiUtils.getImageResourceForFavoriteButton(true));
+                    writeSortOrderToSharedPreferences(mSortOrder, getString(R.string.pref_sort_favorites));
+                }
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -191,24 +264,42 @@ public class MainActivity
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         // Since preferences are updates read them from SharedPreferences again
         readSharedPreferences();
+        invalidateOptionsMenu();
         if (key.equals(getString(R.string.pref_grid_column_count_key))) {
             // if GRID COLUMN COUNT is changed set a new layout manager with new Span Count
             setLayoutManager(mSpanCount);
         } else if (key.equals(getString(R.string.pref_sort_key))) {
-            // if SORT BY option is changed, reload from api with the new api context
-            int last_page = mMoviesAdapter.getLastPage();
-            if (last_page > 0) {
-                mReloadFromApi = true;
-                restartLoader(String.valueOf(last_page));
+            if (mSortOrder.equals(getString(R.string.pref_sort_favorites))) {
+                restartLoader(LOADER_ID_POPULAR_RESULTS_FAVORITES, null);
+            } else {
+                // if SORT BY option is changed, reload from api with the new api context
+                int last_page = mMoviesAdapter.getLastPage();
+                if (last_page > 0) {
+                    mReloadFromApi = true;
+                    restartLoader(LOADER_ID_POPULAR_RESULTS, String.valueOf(last_page));
+                }
             }
         }
 
     }
 
+
     @Override
-    public void onClick(Movie movie) {
+    public void onClick(Movie movie, int adapterPosition) {
         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
         intent.putExtra(INTENT_EXTRA_MOVIE, movie);
-        startActivity(intent);
+        startActivityForResult(intent, getResources().getInteger(R.integer.is_favorites_updated_request));
+    }
+
+    // if user updated favorites in detail view then we should reload the data.
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == getResources().getInteger(R.integer.is_favorites_updated_request)) {
+            if (resultCode == getResources().getInteger(R.integer.favorites_updated)) {
+                mReloadFromApi = true;
+                restartLoader(LOADER_ID_POPULAR_RESULTS, getString(R.string.first_page));
+            }
+        }
     }
 }

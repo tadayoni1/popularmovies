@@ -3,7 +3,6 @@ package com.example.android.PopularMovies.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import java.util.Date;
 import java.util.List;
 
 public class Movie implements Parcelable {
@@ -19,7 +18,8 @@ public class Movie implements Parcelable {
     private List<Integer> genre_ids;
     private String backdrop_path;
     private String overview;
-    private Date release_date;
+    private String release_date;
+    private String marked_as_favorite;
 
     public int getVoteCount() {
         return vote_count;
@@ -109,11 +109,11 @@ public class Movie implements Parcelable {
         this.overview = overview;
     }
 
-    public Date getReleaseDate() {
+    public String getReleaseDate() {
         return release_date;
     }
 
-    public void setReleaseDate(Date release_date) {
+    public void setReleaseDate(String release_date) {
         this.release_date = release_date;
     }
 
@@ -130,10 +130,11 @@ public class Movie implements Parcelable {
         poster_path = in.readString();
         original_language = in.readString();
         original_title = in.readString();
-        genre_ids = in.readArrayList( null);
+        genre_ids = in.readArrayList(null);
         backdrop_path = in.readString();
         overview = in.readString();
-        release_date = (Date) in.readSerializable();
+        release_date = in.readString();
+        marked_as_favorite = in.readString();
 
     }
 
@@ -166,7 +167,15 @@ public class Movie implements Parcelable {
         dest.writeList(genre_ids);
         dest.writeString(backdrop_path);
         dest.writeString(overview);
-        dest.writeSerializable(release_date);
+        dest.writeString(release_date);
+        dest.writeString(marked_as_favorite);
     }
 
+    public boolean isMarkedAsFavorite() {
+        return marked_as_favorite.equals("true");
+    }
+
+    public void setMarkedAsFavorite(boolean marked_as_favorite) {
+        this.marked_as_favorite = marked_as_favorite + "";
+    }
 }

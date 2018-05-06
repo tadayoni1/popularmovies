@@ -14,10 +14,25 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            buildConfigField ("String", "POPULAR_MOVIES_API_KEY", getApiKey("theMovieDbApi"))
+        }
+        defaultConfig {
+            buildConfigField ("String", "POPULAR_MOVIES_API_KEY", getApiKey("theMovieDbApi"))
+        }
+        debug {
+            buildConfigField ("String", "POPULAR_MOVIES_API_KEY", getApiKey("theMovieDbApi"))
         }
     }
+
     dataBinding.enabled = true
 }
+
+static def getApiKey(String property){
+    Properties properties = new Properties()
+    properties.load(new FileInputStream("../api/api_keys.txt"))
+    return "\"" + properties.getProperty(property) +"\""
+}
+
 
 repositories {
 

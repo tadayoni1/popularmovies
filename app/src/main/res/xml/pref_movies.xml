@@ -2,7 +2,7 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <ListPreference
-        android:defaultValue="@string/pref_sort_popular"
+        android:defaultValue="@string/pref_sort_default"
         android:entries="@array/pref_sort_options"
         android:entryValues="@array/pref_sort_values"
         android:key="@string/pref_sort_key"
@@ -10,7 +10,7 @@
         />
 
     <ListPreference
-        android:defaultValue="@string/pref_grid_column_count_three"
+        android:defaultValue="@string/pref_grid_column_count_default"
         android:entries="@array/pref_grid_column_count_options"
         android:entryValues="@array/pref_grid_column_count_values"
         android:key="@string/pref_grid_column_count_key"
