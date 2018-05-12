@@ -12,6 +12,7 @@ import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -43,6 +44,8 @@ public class MainActivity
     public static final String INTENT_EXTRA_MOVIE = "intent-extra-movie";
     public static final String INTENT_EXTRA_ADAPTER_POSITION = "intent-extra-adapter-position";
 
+    public static final String INTENT_EXTRA_IS_FAVORITES_SELECTED = "intent-extra-is-favorites-selected";
+
     private ActivityMainBinding mActivityMainBinding;
 
     private MoviesAdapter mMoviesAdapter;
@@ -52,6 +55,7 @@ public class MainActivity
     private String mLastSortOrder;
 
     private boolean mReloadFromApi;
+    private int mAdapterLastPosition = RecyclerView.NO_POSITION;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -203,7 +207,7 @@ public class MainActivity
             case LOADER_ID_POPULAR_RESULTS:
                 if (data == null) {
                     Toast.makeText(this, getString(R.string.no_internet), Toast.LENGTH_LONG).show();
-                    mMoviesAdapter.setData(null);
+//                    mMoviesAdapter.setData(null);
                 } else {
                     if (mReloadFromApi) {
                         mMoviesAdapter.setData(data);
@@ -216,6 +220,7 @@ public class MainActivity
             case LOADER_ID_POPULAR_RESULTS_FAVORITES:
                 if (data == null) {
                     Toast.makeText(this, getString(R.string.no_favorites), Toast.LENGTH_LONG).show();
+                    mMoviesAdapter.setData(null);
                 } else {
                     mMoviesAdapter.setData(data);
                 }
@@ -234,7 +239,7 @@ public class MainActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.movies_menu, menu);
         readSharedPreferences();
-        menu.getItem(0).setIcon(UiUtils.getImageResourceForFavoriteButton(mSortOrder == getString(R.string.pref_sort_favorites)));
+        menu.getItem(0).setIcon(UiUtils.getImageResourceForFavoriteButton(mSortOrder.equals(getString(R.string.pref_sort_favorites))));
         return true;
     }
 
@@ -273,11 +278,8 @@ public class MainActivity
                 restartLoader(LOADER_ID_POPULAR_RESULTS_FAVORITES, null);
             } else {
                 // if SORT BY option is changed, reload from api with the new api context
-                int last_page = mMoviesAdapter.getLastPage();
-                if (last_page > 0) {
-                    mReloadFromApi = true;
-                    restartLoader(LOADER_ID_POPULAR_RESULTS, String.valueOf(last_page));
-                }
+                mReloadFromApi = true;
+                restartLoader(LOADER_ID_POPULAR_RESULTS, getString(R.string.first_page));
             }
         }
 
@@ -288,7 +290,9 @@ public class MainActivity
     public void onClick(Movie movie, int adapterPosition) {
         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
         intent.putExtra(INTENT_EXTRA_MOVIE, movie);
+        intent.putExtra(INTENT_EXTRA_IS_FAVORITES_SELECTED, mSortOrder.equals(getString(R.string.pref_sort_favorites)));
         startActivityForResult(intent, getResources().getInteger(R.integer.is_favorites_updated_request));
+        mAdapterLastPosition = adapterPosition;
     }
 
     // if user updated favorites in detail view then we should reload the data.
@@ -297,8 +301,15 @@ public class MainActivity
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == getResources().getInteger(R.integer.is_favorites_updated_request)) {
             if (resultCode == getResources().getInteger(R.integer.favorites_updated)) {
-                mReloadFromApi = true;
-                restartLoader(LOADER_ID_POPULAR_RESULTS, getString(R.string.first_page));
+//                if (mSortOrder.equals(getString(R.string.pref_sort_favorites))) {
+//                    restartLoader(LOADER_ID_POPULAR_RESULTS_FAVORITES, null);
+//                } else {
+//                    mReloadFromApi = true;
+//                    restartLoader(LOADER_ID_POPULAR_RESULTS, getString(R.string.first_page));
+//                }
+                mMoviesAdapter.toggleFavorites(mAdapterLastPosition);
+            } else {
+                mAdapterLastPosition = RecyclerView.NO_POSITION;
             }
         }
     }

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.example.android.PopularMovies.data.MovieContract.ImageEntry;
 import com.example.android.PopularMovies.data.MovieContract.MovieEntry;
 
 public class MovieDbHelper extends SQLiteOpenHelper {
@@ -38,11 +39,22 @@ public class MovieDbHelper extends SQLiteOpenHelper {
 
         db.execSQL(SQL_CREATE_MOVIE_TABLE);
 
+        final String SQL_CREATE_IMAGE_TABLE =
+                "CREATE TABLE " + ImageEntry.TABLE_NAME + " (" +
+                        ImageEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        ImageEntry.COLUMN_ID + " INTEGER NOT NULL, " +
+                        ImageEntry.COLUMN_FRONT_BACK + " TEXT, " +
+                        ImageEntry.COLUMN_BITMAP + " BLOB " +
+                        ");";
+
+        db.execSQL(SQL_CREATE_IMAGE_TABLE);
+
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + MovieEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + ImageEntry.TABLE_NAME);
         onCreate(db);
     }
 }

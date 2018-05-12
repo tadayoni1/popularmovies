@@ -9,14 +9,10 @@
 
         <TextView
             android:id="@+id/original_title_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/fragment_detail_original_title_tv"
             android:layout_marginLeft="12dp"
             android:layout_marginStart="12dp"
             android:layout_marginTop="16dp"
-            android:textSize="24dp"
-            android:textStyle="bold"
-            android:maxWidth="180dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="@string/sample_movie_title" />
@@ -24,11 +20,9 @@
 
         <TextView
             android:id="@+id/rating_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/fragment_detail_rating_tv"
             android:layout_marginEnd="8dp"
             android:layout_marginRight="8dp"
-            android:textSize="24dp"
             app:layout_constraintBottom_toBottomOf="@+id/original_title_tv"
             app:layout_constraintEnd_toStartOf="@+id/rating_rb"
             app:layout_constraintTop_toTopOf="@+id/original_title_tv"

@@ -45,6 +45,10 @@ public class PopularResults implements Parcelable {
         this.results = results;
     }
 
+    public void toggleFavorite(int adapterPosition) {
+        this.results.get(adapterPosition).setMarkedAsFavorite(!this.results.get(adapterPosition).isMarkedAsFavorite());
+    }
+
     public void add(PopularResults popularResults) {
         this.last_page = popularResults.getLastPage();
         this.total_results = popularResults.getTotalResults();
@@ -63,7 +67,7 @@ public class PopularResults implements Parcelable {
         total_results = in.readInt();
         total_pages = in.readInt();
         results = new ArrayList<>();
-        in.readTypedList(results , Movie.CREATOR);
+        in.readTypedList(results, Movie.CREATOR);
     }
 
     public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
@@ -75,6 +79,7 @@ public class PopularResults implements Parcelable {
             return new PopularResults[size];
         }
     };
+
     @Override
     public int describeContents() {
         return 0;

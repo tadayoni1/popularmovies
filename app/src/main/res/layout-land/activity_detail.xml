@@ -10,31 +10,13 @@
         android:layout_height="match_parent"
         tools:context=".DetailActivity">
 
-        <!--<TextView-->
-        <!--android:id="@+id/original_title_tv"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:background="@color/colorAccent"-->
-        <!--android:gravity="center_vertical"-->
-        <!--android:padding="15dp"-->
-        <!--android:textColor="@color/md_grey_50"-->
-        <!--android:textSize="20sp"-->
-        <!--app:layout_constraintEnd_toEndOf="parent"-->
-        <!--app:layout_constraintStart_toStartOf="parent"-->
-        <!--app:layout_constraintTop_toTopOf="parent"-->
-        <!--tools:text="@string/sample_movie_title" />-->
 
         <ImageView
             android:id="@+id/movie_poster_iv"
+            style="@style/detail_activity_movie_poster_iv"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginBottom="8dp"
-            android:layout_marginEnd="12dp"
-            android:layout_marginLeft="12dp"
-            android:layout_marginRight="12dp"
-            android:layout_marginStart="12dp"
-            android:layout_marginTop="12dp"
-            android:adjustViewBounds="true"
+            android:layout_marginBottom="@dimen/default_margin"
             android:scaleType="centerCrop"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/vertical_guideline"
@@ -44,23 +26,14 @@
 
         <ImageButton
             android:id="@+id/favorite"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
-            android:layout_marginTop="8dp"
-            android:background="#00ffffff"
-            android:scaleType="centerCrop"
-            android:src="@android:drawable/btn_star_big_off"
+            style="@style/detail_activity_favorite"
             app:layout_constraintEnd_toEndOf="@+id/movie_poster_iv"
             app:layout_constraintTop_toTopOf="@+id/movie_poster_iv" />
 
 
         <android.support.constraint.Guideline
             android:id="@+id/vertical_guideline"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
+            style="@style/detail_activity_guideline"
             app:layout_constraintGuide_percent="0.4" />
 
         <include

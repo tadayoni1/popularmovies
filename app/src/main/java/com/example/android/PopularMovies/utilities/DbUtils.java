@@ -3,16 +3,25 @@ package com.example.android.PopularMovies.utilities;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.util.Log;
 
 import com.example.android.PopularMovies.data.MovieContract;
+import com.example.android.PopularMovies.data.MovieContract.ImageEntry;
 import com.example.android.PopularMovies.data.MovieContract.MovieEntry;
 import com.example.android.PopularMovies.model.Movie;
 import com.example.android.PopularMovies.model.PopularResults;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class DbUtils {
+
+    private static final String LOG_TAG = DbUtils.class.getSimpleName();
+
 
     public static ContentValues createContentValuesFromMovie(Movie movie) {
         ContentValues contentValues = new ContentValues();
@@ -50,7 +59,9 @@ public class DbUtils {
         String[] genre_ids_tokenized = genre_ids_string.split(",");
         List<Integer> genre_ids = new ArrayList<>();
         for (String str : genre_ids_tokenized) {
-            genre_ids.add(Integer.parseInt(str.trim()));
+            if (!str.trim().equals("")) {
+                genre_ids.add(Integer.parseInt(str.trim()));
+            }
         }
         movie.setGenreIds(genre_ids);
 
@@ -63,12 +74,84 @@ public class DbUtils {
         return movie;
     }
 
-    public static void updateFavorites(Context context, boolean isMarkedAsFavorite, Movie movie) {
+    public static ContentValues persistMovieBitmaps(Context context, Bitmap bitmap, String sub_path, int id) {
+
+        ContentValues contentValues = new ContentValues();
+
+        Log.d(LOG_TAG, "sub_path: " + sub_path);
+        Cursor cursor = context.getContentResolver().query(
+                ImageEntry.buildImageUriWithFrontBackAndId(sub_path, id),
+                new String[]{ImageEntry.COLUMN_ID},
+                MovieContract.ImageEntry.COLUMN_ID + " = ? AND " + MovieContract.ImageEntry.COLUMN_FRONT_BACK + " = ? ",
+                new String[]{String.valueOf(id), sub_path},
+                null);
+
+        if (!cursor.moveToFirst()) {
+            Log.d(LOG_TAG, "persisting image to db: " + sub_path + " id: " + id);
+            contentValues.put(ImageEntry.COLUMN_ID, id);
+            contentValues.put(ImageEntry.COLUMN_FRONT_BACK, sub_path);
+            contentValues.put(ImageEntry.COLUMN_BITMAP, BitmapUtils.getBytes(bitmap));
+            context.getContentResolver().insert(
+                    ImageEntry.CONTENT_URI,
+                    contentValues);
+        }
+        cursor.close();
+
+        return contentValues;
+    }
+
+    public static Bitmap getBitmapFromCursor(Cursor cursor) {
+        return BitmapUtils.getImage(cursor.getBlob(cursor.getColumnIndex(ImageEntry.COLUMN_BITMAP)));
+    }
+
+    public static void updateFavorites(final Context context, boolean isMarkedAsFavorite, final Movie movie) {
+        Log.d(LOG_TAG, "isMarkedAsFavorite: " + isMarkedAsFavorite);
         if (isMarkedAsFavorite) {
             context.getContentResolver().insert(MovieContract.MovieEntry.CONTENT_URI,
                     DbUtils.createContentValuesFromMovie(movie));
+
+            Picasso.with(context)
+                    .load(NetworkUtils.getPosterUrl(movie.getPosterPath(), context))
+                    .into(new Target() {
+                        @Override
+                        public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                            persistMovieBitmaps(context, bitmap, MovieContract.SUB_PATH_FRONT, movie.getId());
+                        }
+
+                        @Override
+                        public void onBitmapFailed(Drawable errorDrawable) {
+                        }
+
+                        @Override
+                        public void onPrepareLoad(Drawable placeHolderDrawable) {
+                        }
+                    });
+
+            Picasso.with(context)
+                    .load(NetworkUtils.getPosterUrl(movie.getBackdropPath(), context))
+                    .into(new Target() {
+                        @Override
+                        public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                            Log.d(LOG_TAG, "onBitmapLoaded");
+                            persistMovieBitmaps(context, bitmap, MovieContract.SUB_PATH_BACK, movie.getId());
+                        }
+
+                        @Override
+                        public void onBitmapFailed(Drawable errorDrawable) {
+                        }
+
+                        @Override
+                        public void onPrepareLoad(Drawable placeHolderDrawable) {
+                        }
+                    });
         } else {
             context.getContentResolver().delete(MovieContract.MovieEntry.buildMovieUriWithId(movie.getId()),
+                    null,
+                    null);
+            context.getContentResolver().delete(ImageEntry.buildImageUriWithFrontBackAndId(MovieContract.SUB_PATH_FRONT, movie.getId()),
+                    null,
+                    null);
+            context.getContentResolver().delete(ImageEntry.buildImageUriWithFrontBackAndId(MovieContract.SUB_PATH_BACK, movie.getId()),
                     null,
                     null);
         }

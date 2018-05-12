@@ -82,6 +82,11 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
         this.onLastItemReachedListener = onLastItemReachedListener;
     }
 
+    public void toggleFavorites(int adapterPosition) {
+        mPopularResults.toggleFavorite(adapterPosition);
+        notifyDataSetChanged();
+    }
+
     public PopularResults getData() {
         return mPopularResults;
     }
@@ -117,6 +122,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
                 public void onClick(View v) {
                     int adapterPosition = getAdapterPosition();
                     boolean markedAsFavorite = !mPopularResults.getResults().get(adapterPosition).isMarkedAsFavorite();
+//                    ((BitmapDrawable)mMovieImageView.getDrawable()).getBitmap()
                     DbUtils.updateFavorites(mContext, markedAsFavorite, mPopularResults.getResults().get(adapterPosition));
                     UiUtils.showToastForFavoriteButton(mContext, markedAsFavorite, mPopularResults.getResults().get(adapterPosition).getTitle());
                     mFavoriteImageButton.setImageResource(UiUtils.getImageResourceForFavoriteButton(markedAsFavorite));

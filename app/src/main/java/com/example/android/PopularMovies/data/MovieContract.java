@@ -10,6 +10,10 @@ public class MovieContract {
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 
     public static final String PATH_MOVIE = "movie";
+    public static final String PATH_IMAGE = "image";
+
+    public static final String SUB_PATH_FRONT = "front";
+    public static final String SUB_PATH_BACK = "back";
 
 
     public static final class MovieEntry implements BaseColumns {
@@ -39,5 +43,31 @@ public class MovieContract {
                     .appendPath(Integer.toString(id))
                     .build();
         }
+    }
+
+    public static final class ImageEntry implements BaseColumns {
+
+        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon()
+                .appendPath(PATH_IMAGE)
+                .build();
+
+        public static final String TABLE_NAME = "image";
+
+        public static final String COLUMN_ID = "id";
+        public static final String COLUMN_FRONT_BACK = "front_back";
+        public static final String COLUMN_BITMAP = "image_bitmap";
+
+        public static Uri buildImageUriWithFrontBack(String front_back) {
+            return CONTENT_URI.buildUpon()
+                    .appendPath(front_back)
+                    .build();
+        }
+
+        public static Uri buildImageUriWithFrontBackAndId(String front_back, int id) {
+            return buildImageUriWithFrontBack(front_back).buildUpon()
+                    .appendPath(Integer.toString(id))
+                    .build();
+        }
+
     }
 }

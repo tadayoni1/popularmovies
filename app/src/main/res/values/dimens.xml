@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="trailer_height">100dp</dimen>
+    <dimen name="reviews_height">400dp</dimen>
+    <dimen name="video_title_max_width">176sp</dimen>
+    <dimen name="default_margin">8dp</dimen>
+    <dimen name="detail_activity_favorite_dimensions">35dp</dimen>
+    <dimen name="main_activity_favorite_dimensions">25dp</dimen>
+</resources>

@@ -6,6 +6,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -25,6 +26,7 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideosAdap
     public interface OnClickHandler {
         void onClick(String url);
 
+        void onShareButtonClick(String url);
     }
 
     final private OnClickHandler mOnClickHandler;
@@ -49,6 +51,7 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideosAdap
     public void onBindViewHolder(@NonNull VideosAdapterViewHolder holder, int position) {
         Picasso.with(mContext)
                 .load(NetworkUtils.getYouTubeThumbnailLink(mVideos.getResults().get(position).getKey()))
+                .placeholder(R.drawable.placeholder_image)
                 .into(holder.mVideoImageView);
         holder.mVideoTitle.setText(mVideos.getResults().get(position).getName());
 
@@ -79,11 +82,22 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideosAdap
 
         public final ImageView mVideoImageView;
         public final TextView mVideoTitle;
+        private final ImageButton mFavoriteImageButton;
 
         public VideosAdapterViewHolder(View itemView) {
             super(itemView);
             mVideoImageView = itemView.findViewById(R.id.thumbnail_iv);
             mVideoTitle = itemView.findViewById(R.id.video_title_tv);
+            mFavoriteImageButton = itemView.findViewById(R.id.share_ib);
+
+            mFavoriteImageButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int adapterPosition = getAdapterPosition();
+                    String videoLink = NetworkUtils.getYouTubeVideoLink(mVideos.getResults().get(adapterPosition).getKey());
+                    mOnClickHandler.onShareButtonClick(videoLink);
+                }
+            });
 
             itemView.setOnClickListener(this);
         }

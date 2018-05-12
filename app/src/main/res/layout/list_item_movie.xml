@@ -12,15 +12,16 @@
         android:layout_gravity="center"
         android:adjustViewBounds="true"
         android:scaleType="centerCrop"
+        android:tint="@drawable/list_item_movie_touch_selector"
         tools:src="@drawable/sample_movie_poster" />
 
     <ImageButton
         android:id="@+id/favorite"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
+        android:layout_width="@dimen/main_activity_favorite_dimensions"
+        android:layout_height="@dimen/main_activity_favorite_dimensions"
         android:layout_gravity="top|end"
-        android:layout_margin="8dp"
-        android:background="#00ffffff"
+        android:layout_margin="@dimen/default_margin"
+        android:background="@color/transparent"
         android:scaleType="centerCrop"
         android:src="@android:drawable/btn_star_big_off" />
 

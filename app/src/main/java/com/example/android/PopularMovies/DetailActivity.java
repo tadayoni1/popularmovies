@@ -2,6 +2,7 @@ package com.example.android.PopularMovies;
 
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.databinding.DataBindingUtil;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -11,6 +12,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.app.ShareCompat;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
@@ -19,6 +21,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.example.android.PopularMovies.data.MovieContract;
 import com.example.android.PopularMovies.databinding.ActivityDetailBinding;
 import com.example.android.PopularMovies.model.Movie;
 import com.example.android.PopularMovies.model.Reviews;
@@ -42,14 +45,16 @@ public class DetailActivity
     private static final String LIFECYCLE_CALLBACKS_REVIEWS_KEY = "callbacks-reviews-key";
     private static final String LIFECYCLE_FAVORITES_UPDATES_KEY = "favorites-updates-key";
 
+
     private Movie mMovie;
+    private boolean mIsFavoritesSelected;
 
     private ActivityDetailBinding mActivityDetailBinding;
 
     private VideosAdapter mVideosAdapter;
     private ReviewsAdapter mReviewsAdapter;
 
-    private boolean isFavoritesUpdated;
+    private boolean mIsFavoritesUpdated;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,9 +63,9 @@ public class DetailActivity
 
         // if user has marked/unmarked a movie as favorite then we should reload data in MainActivity
         if (savedInstanceState == null || !savedInstanceState.containsKey(LIFECYCLE_FAVORITES_UPDATES_KEY)) {
-            isFavoritesUpdated = false;
+            mIsFavoritesUpdated = false;
         } else {
-            isFavoritesUpdated = savedInstanceState.getBoolean(LIFECYCLE_FAVORITES_UPDATES_KEY);
+            mIsFavoritesUpdated = savedInstanceState.getBoolean(LIFECYCLE_FAVORITES_UPDATES_KEY);
         }
         setResults();
 
@@ -68,6 +73,7 @@ public class DetailActivity
 
         Intent intentThatStartedThisActivity = getIntent();
         mMovie = intentThatStartedThisActivity.getParcelableExtra(MainActivity.INTENT_EXTRA_MOVIE);
+        mIsFavoritesSelected = intentThatStartedThisActivity.getBooleanExtra(MainActivity.INTENT_EXTRA_IS_FAVORITES_SELECTED, false);
 
         mActivityDetailBinding.favorite.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -77,7 +83,7 @@ public class DetailActivity
                 UiUtils.showToastForFavoriteButton(getBaseContext(), markedAsFavorite, mMovie.getTitle());
                 mActivityDetailBinding.favorite.setImageResource(UiUtils.getImageResourceForFavoriteButton(markedAsFavorite));
                 mMovie.setMarkedAsFavorite(markedAsFavorite);
-                isFavoritesUpdated = !isFavoritesUpdated;
+                mIsFavoritesUpdated = !mIsFavoritesUpdated;
                 setResults();
             }
         });
@@ -106,22 +112,22 @@ public class DetailActivity
         super.onSaveInstanceState(outState);
         outState.putParcelable(LIFECYCLE_CALLBACKS_VIDEOS_KEY, mVideosAdapter.getData());
         outState.putParcelable(LIFECYCLE_CALLBACKS_REVIEWS_KEY, mReviewsAdapter.getData());
-        outState.putBoolean(LIFECYCLE_FAVORITES_UPDATES_KEY, isFavoritesUpdated);
+        outState.putBoolean(LIFECYCLE_FAVORITES_UPDATES_KEY, mIsFavoritesUpdated);
     }
 
     @Override
     public void onBackPressed() {
-        if (isFavoritesUpdated) {
+        if (mIsFavoritesUpdated) {
             setResult(getResources().getInteger(R.integer.favorites_updated));
         } else {
             setResult(getResources().getInteger(R.integer.favorites_not_updated));
         }
-        Log.d(LOG_TAG, "isFavoritesUpdated: " + isFavoritesUpdated);
+        Log.d(LOG_TAG, "mIsFavoritesUpdated: " + mIsFavoritesUpdated);
         finish();
     }
 
     private void populateUI() {
-        String year = mMovie.getReleaseDate().substring(0,4);
+        String year = mMovie.getReleaseDate().substring(0, 4);
 
         mActivityDetailBinding.detailF.originalTitleTv.setText(String.format(getString(R.string.format_original_name_in_detail_view), mMovie.getOriginalTitle(), year));
 
@@ -131,44 +137,92 @@ public class DetailActivity
         mActivityDetailBinding.detailF.ratingTv.setText(String.format(getString(R.string.format_ratings), mMovie.getVoteAverage()));
         mActivityDetailBinding.detailF.ratingRb.setRating((float) mMovie.getVoteAverage() / 2);
         mActivityDetailBinding.overviewF.overviewTv.setText(mMovie.getOverview());
-        Picasso.with(this)
-                .load(NetworkUtils.getPosterUrl(mMovie.getPosterPath(), this))
-                .placeholder(R.drawable.placeholder_image)
-                .into(mActivityDetailBinding.moviePosterIv);
-        String bg_link;
-        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-            bg_link = NetworkUtils.getPosterUrl(mMovie.getPosterPath(), this);
-        } else {
-            bg_link = NetworkUtils.getPosterUrl(mMovie.getBackdropPath(), this);
-        }
-        Picasso.with(this)
-                .load(bg_link)
-                .into(new Target() {
-                    @Override
-                    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                        Drawable bg = new BitmapDrawable(getResources(), bitmap);
-                        bg.setAlpha(getBaseContext().getResources().getInteger(R.integer.detail_activity_background_alpha));
-                        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-                            mActivityDetailBinding.scrollView.setBackground(bg);
-                        } else {
-                            mActivityDetailBinding.constraintLayout.setBackground(bg);
-                        }
-                    }
 
-                    @Override
-                    public void onBitmapFailed(Drawable errorDrawable) {
-
-                    }
-
-                    @Override
-                    public void onPrepareLoad(Drawable placeHolderDrawable) {
-
-                    }
-                });
+        loadPosters();
 
         mActivityDetailBinding.favorite.setImageResource(UiUtils.getImageResourceForFavoriteButton(mMovie.isMarkedAsFavorite()));
     }
 
+    private void loadPosters() {
+        // Check to see if DetailActivity was started when favorites were shown. In that case we can load images from DB
+        if (mIsFavoritesSelected) {
+            Bitmap bitmap = null;
+            // Load image from DB
+            Cursor cursor = getContentResolver().query(MovieContract.ImageEntry.buildImageUriWithFrontBackAndId(MovieContract.SUB_PATH_FRONT, mMovie.getId()),
+                    null,
+                    null,
+                    null,
+                    null);
+            if (cursor.moveToFirst()) {
+                Log.d(LOG_TAG, "SUB_PATH_FRONT");
+                bitmap = DbUtils.getBitmapFromCursor(cursor);
+                mActivityDetailBinding.moviePosterIv.setImageBitmap(bitmap);
+            }
+            cursor.close();
+            Drawable bg;
+            // if phone is in portrait mode we can use the same image for background, otherwise we load dropback from DB
+            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+                bg = new BitmapDrawable(getResources(), bitmap);
+                if (bg != null) {
+                    bg.setAlpha(getBaseContext().getResources().getInteger(R.integer.detail_activity_background_alpha));
+                    mActivityDetailBinding.scrollView.setBackground(bg);
+                }
+            } else {
+                // load dropback from DB
+                cursor = getContentResolver().query(MovieContract.ImageEntry.buildImageUriWithFrontBackAndId(MovieContract.SUB_PATH_BACK, mMovie.getId()),
+                        null,
+                        null,
+                        null,
+                        null);
+                if (cursor.moveToFirst()) {
+                    bg = new BitmapDrawable(getResources(), DbUtils.getBitmapFromCursor(cursor));
+                    bg.setAlpha(getBaseContext().getResources().getInteger(R.integer.detail_activity_background_alpha));
+                    mActivityDetailBinding.constraintLayout.setBackground(bg);
+                }
+            }
+            cursor.close();
+
+        } else {
+            // if DEtailActivity was started when favorites was not selected then load image from API
+            Picasso.with(this)
+                    .load(NetworkUtils.getPosterUrl(mMovie.getPosterPath(), this))
+                    .placeholder(R.drawable.placeholder_image)
+                    .into(mActivityDetailBinding.moviePosterIv);
+            String bg_link;
+            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+                bg_link = NetworkUtils.getPosterUrl(mMovie.getPosterPath(), this);
+            } else {
+                bg_link = NetworkUtils.getPosterUrl(mMovie.getBackdropPath(), this);
+            }
+            Picasso.with(this)
+                    .load(bg_link)
+                    .into(new Target() {
+                        @Override
+                        public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                            Drawable bg = new BitmapDrawable(getResources(), bitmap);
+                            bg.setAlpha(getBaseContext().getResources().getInteger(R.integer.detail_activity_background_alpha));
+                            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+                                mActivityDetailBinding.scrollView.setBackground(bg);
+                            } else {
+                                mActivityDetailBinding.constraintLayout.setBackground(bg);
+                            }
+                        }
+
+                        @Override
+                        public void onBitmapFailed(Drawable errorDrawable) {
+
+                        }
+
+                        @Override
+                        public void onPrepareLoad(Drawable placeHolderDrawable) {
+
+                        }
+                    });
+        }
+    }
+
+
+    // initialize layouts for VIDEOS(TRAILERS) recycler_view and REVIEWS recycler_view
     private void initLayoutManagerAndAdapter(int loaderId) {
         switch (loaderId) {
             case LOADER_ID_VIDEOS:
@@ -273,8 +327,18 @@ public class DetailActivity
         }
     }
 
+    @Override
+    public void onShareButtonClick(String url) {
+        Intent shareUrlIntent = ShareCompat.IntentBuilder.from(this)
+                .setType("text/plain")
+                .setText(url)
+                .getIntent();
+        shareUrlIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
+        startActivity(shareUrlIntent);
+    }
+
     private void setResults() {
-        if (isFavoritesUpdated) {
+        if (mIsFavoritesUpdated) {
             setResult(getResources().getInteger(R.integer.favorites_updated));
         } else {
             setResult(getResources().getInteger(R.integer.favorites_not_updated));

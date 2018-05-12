@@ -31,6 +31,14 @@
     <color name="md_grey_700">#616161</color>
     <color name="md_grey_800">#424242</color>
     <color name="md_grey_900">#212121</color>
+
     <color name="md_black_1000">#000000</color>
     <color name="md_white_1000">#ffffff</color>
+
+
+    <color name="transparent">#00FFFFFF</color>
+    <color name="image_selected">#333b50ce</color>
+
+
+
 </resources>

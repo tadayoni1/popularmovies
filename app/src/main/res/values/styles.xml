@@ -10,12 +10,44 @@
         <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
     </style>
 
-
-    <style name="detail_activity_text_views">
+    <style name="wrap_content">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginLeft">24dp</item>
-        <item name="android:layout_marginRight">24dp</item>
+    </style>
+
+    <style name="fragment_detail_original_title_tv" parent="wrap_content">
+        <item name="android:textSize">24dp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxWidth">180dp</item>
+    </style>
+
+    <style name="fragment_detail_rating_tv" parent="wrap_content">
+        <item name="android:textSize">24dp</item>
+    </style>
+
+    <style name="detail_activity_movie_poster_iv">
+        <item name="android:layout_marginBottom">12dp</item>
+        <item name="android:layout_marginEnd">12dp</item>
+        <item name="android:layout_marginLeft">12dp</item>
+        <item name="android:layout_marginRight">12dp</item>
+        <item name="android:layout_marginStart">12dp</item>
+        <item name="android:layout_marginTop">12dp</item>
+        <item name="android:adjustViewBounds">true</item>
+    </style>
+
+    <style name="detail_activity_favorite">
+        <item name="android:layout_width">@dimen/detail_activity_favorite_dimensions</item>
+        <item name="android:layout_height">@dimen/detail_activity_favorite_dimensions</item>
+        <item name="android:layout_marginEnd">@dimen/default_margin</item>
+        <item name="android:layout_marginRight">@dimen/default_margin</item>
+        <item name="android:layout_marginTop">@dimen/default_margin</item>
+        <item name="android:background">@color/transparent</item>
+        <item name="android:scaleType">centerCrop</item>
+        <item name="android:src">@android:drawable/btn_star_big_off</item>
+    </style>
+
+    <style name="detail_activity_guideline" parent="wrap_content">
+        <item name="android:orientation">vertical</item>
     </style>
 
 </resources>
