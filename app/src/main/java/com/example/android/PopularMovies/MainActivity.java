@@ -1,5 +1,6 @@
 package com.example.android.PopularMovies;
 
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.databinding.DataBindingUtil;
@@ -13,15 +14,19 @@ import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.transition.Explode;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Window;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.example.android.PopularMovies.databinding.ActivityMainBinding;
 import com.example.android.PopularMovies.model.Movie;
 import com.example.android.PopularMovies.model.PopularResults;
 import com.example.android.PopularMovies.utilities.DbUtils;
+import com.example.android.PopularMovies.utilities.MiscUtils;
 import com.example.android.PopularMovies.utilities.NetworkUtils;
 import com.example.android.PopularMovies.utilities.UiUtils;
 
@@ -60,7 +65,15 @@ public class MainActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+            getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
+            Explode explode = new Explode();
+            explode.setDuration(1000);
+            getWindow().setExitTransition(explode);
+        }
         setContentView(R.layout.activity_main);
+
+
         mActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
         // register the preference change listener
@@ -287,11 +300,21 @@ public class MainActivity
 
 
     @Override
-    public void onClick(Movie movie, int adapterPosition) {
+    public void onClick(Movie movie, int adapterPosition, ImageView aMovieImageView) {
         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
         intent.putExtra(INTENT_EXTRA_MOVIE, movie);
         intent.putExtra(INTENT_EXTRA_IS_FAVORITES_SELECTED, mSortOrder.equals(getString(R.string.pref_sort_favorites)));
-        startActivityForResult(intent, getResources().getInteger(R.integer.is_favorites_updated_request));
+        if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+            ActivityOptions options = ActivityOptions
+                    .makeSceneTransitionAnimation(this, aMovieImageView, getString(R.string.shared_element_movie_image_view));
+            startActivityForResult(intent,
+                    getResources().getInteger(R.integer.is_favorites_updated_request),
+                    options.toBundle());
+        } else {
+            startActivityForResult(intent,
+                    getResources().getInteger(R.integer.is_favorites_updated_request));
+        }
+
         mAdapterLastPosition = adapterPosition;
     }
 

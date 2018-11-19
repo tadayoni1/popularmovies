@@ -19,6 +19,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:scaleType="fitCenter"
+                android:transitionName="@string/shared_element_movie_image_view"
                 app:layout_constraintEnd_toStartOf="@id/vertical_guideline"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"

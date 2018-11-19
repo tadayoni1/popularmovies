@@ -2,6 +2,7 @@ package com.example.android.PopularMovies;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +13,7 @@ import android.widget.ImageView;
 import com.example.android.PopularMovies.model.Movie;
 import com.example.android.PopularMovies.model.PopularResults;
 import com.example.android.PopularMovies.utilities.DbUtils;
+import com.example.android.PopularMovies.utilities.MiscUtils;
 import com.example.android.PopularMovies.utilities.NetworkUtils;
 import com.example.android.PopularMovies.utilities.UiUtils;
 import com.squareup.picasso.Picasso;
@@ -28,7 +30,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
     final private MoviesAdapterOnClickHandler mClickHandler;
 
     public interface MoviesAdapterOnClickHandler {
-        void onClick(Movie movie, int adapterPosition);
+        void onClick(Movie movie, int adapterPosition, ImageView aMovieImageView);
     }
 
     public MoviesAdapter(Context context, MoviesAdapterOnClickHandler clickHandler) {
@@ -61,6 +63,11 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
                 .load(NetworkUtils.getPosterUrl(mPopularResults.getResults().get(position).getPosterPath(), mContext))
                 .placeholder(R.drawable.placeholder_image)
                 .into(holder.mMovieImageView);
+
+        if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+            ViewCompat.setTransitionName(holder.mMovieImageView, mContext.getString(R.string.shared_element_movie_image_view));
+        }
+
         holder.mFavoriteImageButton.setImageResource(UiUtils.getImageResourceForFavoriteButton(mPopularResults.getResults().get(position).isMarkedAsFavorite()));
         if (position >= getItemCount() - 1) {
             if (mPopularResults.getLastPage() < mPopularResults.getTotalPages()) {
@@ -137,7 +144,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
         public void onClick(View v) {
             int adapterPosition = getAdapterPosition();
             Movie movie = mPopularResults.getResults().get(adapterPosition);
-            mClickHandler.onClick(movie, adapterPosition);
+            mClickHandler.onClick(movie, adapterPosition, mMovieImageView);
         }
 
     }

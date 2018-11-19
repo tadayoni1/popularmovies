@@ -17,8 +17,10 @@ import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
+import android.transition.Slide;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.widget.Toast;
 
 import com.example.android.PopularMovies.data.MovieContract;
@@ -27,6 +29,7 @@ import com.example.android.PopularMovies.model.Movie;
 import com.example.android.PopularMovies.model.Reviews;
 import com.example.android.PopularMovies.model.Videos;
 import com.example.android.PopularMovies.utilities.DbUtils;
+import com.example.android.PopularMovies.utilities.MiscUtils;
 import com.example.android.PopularMovies.utilities.NetworkUtils;
 import com.example.android.PopularMovies.utilities.UiUtils;
 import com.squareup.picasso.Picasso;
@@ -59,7 +62,12 @@ public class DetailActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (MiscUtils.LOLLIPOP_AND_HIGHER) {
+            getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
+            getWindow().setEnterTransition(new Slide());
+        }
         setContentView(R.layout.activity_detail);
+
 
         // if user has marked/unmarked a movie as favorite then we should reload data in MainActivity
         if (savedInstanceState == null || !savedInstanceState.containsKey(LIFECYCLE_FAVORITES_UPDATES_KEY)) {
